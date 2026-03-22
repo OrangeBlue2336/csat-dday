@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="google-site-verification" content="wb06y5YqcNUINlEKv2FjtvywsBm6Ex1KGFrC-Z-BGWc" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/csat-dday/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/csat-dday/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/csat-dday/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/csat-dday/favicon/site.webmanifest">
+    <meta charset="UTF-8">
+        <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-873KLGWE2P"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-873KLGWE2P');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수능 D-Day 카운터 - 모의고사 및 학력평가 디데이 계산기</title>
+    <meta name="description" content="수능 및 학력평가(모의고사) 디데이를 실시간으로 계산해주는 웹 애플리케이션입니다. 진행도, 목표일까지의 남은 시간 등을 한눈에 확인하세요.">
+    <meta name="keywords" content="수능, 디데이, D-Day, 카운터, 모의고사, 학력평가, 수능 디데이 계산기, 2026 수능, 2027 수능, 수험생 타이머">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://orangeblue2336.github.io/csat-dday/index">
+    <meta property="og:title" content="수능/모의고사 D-Day 카운터">
+    <meta property="og:description" content="수능 및 모의고사 디데이를 실시간으로 계산해주는 직관적인 타이머입니다. 남은 시간을 한눈에 확인하세요!">
+    <meta property="og:image" content="https://orangeblue2336.github.io/csat-dday/images/OG-image.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="수능/모의고사 D-Day 카운터">
+    <meta name="twitter:description" content="수능 및 모의고사 디데이를 실시간으로 계산해주는 직관적인 타이머입니다.">
+    <meta name="twitter:image" content="https://orangeblue2336.github.io/csat-dday/images/OG-image.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "수능 D-Day 카운터",
+      "url": "https://orangeblue2336.github.io/csat-dday/index",
+      "description": "수능 및 학력평가(모의고사) 디데이를 실시간으로 계산하고 진행도를 시각화하는 웹 애플리케이션입니다.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "All",
+      "inLanguage": "ko"
+    }
+    </script>
+    <style>
+    @font-face {
+        font-family: 'CustomFont';
+        src: url('fonts/경기천년제목_M.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: 'CustomFont';
+        src: url('fonts/경기천년제목_B.ttf') format('truetype');
+        font-weight: bold;
+        font-style: normal;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'CustomFont', 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        padding-bottom: 30px;
+    }
+
+    /* ── 로딩 오버레이 ── */
+    #loadingOverlay {
+        position: fixed; inset: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s;
+    }
+    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-dot {
+        width: 12px; height: 12px; border-radius: 50%;
+        background: rgba(255,255,255,0.8);
+        margin: 0 5px;
+        animation: bounce 1.2s infinite;
+    }
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    .container {
+        width: 90%;
+        max-width: 800px;
+        position: relative;
+        margin-top: 150px;
+    }
+
+    /* ── 월 전/후반 박스 ── */
+    .month-period-box {
+        position: absolute;
+        top: -89px;
+        left: 0px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        border-radius: 12px 12px 0 0;
+        padding: 8px 16px;
+        font-size: 13px;
+        color: white;
+        font-weight: 500;
+        border-bottom: none;
+        min-width: 150px;
+        margin-top: -30px;
+        text-align: center;
+    }
+
+    /* ── 턴 표시기 ── */
+    .turn-indicator {
+        position: absolute;
+        top: -90px;
+        left: 0px;
+        background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%);
+        border-radius: 0 0 20px 20px;
+        padding: 7px 27px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        min-width: 150px;
+    }
+    .turn-header {
+        font-size: 14px; font-weight: bold; color: white;
+        margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .turn-value {
+        font-size: 48px; font-weight: bold; color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .turn-unit { font-size: 24px; margin-left: 5px; }
+
+    /* ── 목표 박스 ── */
+    .goal-box {
+        position: absolute;
+        top: -70px;
+        left: 190px;
+        background: linear-gradient(135deg, #56d9ff 0%, #35b3ff 100%);
+        padding: 12px 20px 12px 25px;
+        border-radius: 0 15px 15px 0;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        color: white;
+        font-size: 19px;
+        font-weight: 500;
+        width: 609px;
+        min-width: 280px;
+        position: relative;
+        z-index: 1;
+    }
+    .goal-box::before {
+        content: '';
+        position: absolute;
+        left: -20px; top: 0;
+        width: 0; height: 0;
+        border-style: solid;
+        border-width: 32px 20px 32px 0;
+        border-color: transparent #56d9ff transparent transparent;
+    }
+    .goal-text { position: relative; z-index: 2; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+    .goal-label { font-size: 14px; opacity: 0.85; margin-bottom: 3px; font-weight: bold; }
+
+    /* ── 카드 컨테이너 ── */
+    #cardsContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* ── 메인 카드 ── */
+    .main-card {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    #cardsContainer .main-card:first-child { margin-top: -50px; }
+
+    /* ── D-Day 표시 ── */
+    .dday-container { text-align: center; margin-bottom: 50px; }
+    .dday-value {
+        font-size: 120px; font-weight: bold;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        letter-spacing: -5px;
+        margin-top: 30px; margin-bottom: -20px;
+    }
+    .dday-label { font-size: 24px; margin-bottom: 10px; opacity: 0.9; }
+
+    /* ── 프로그레스 바 ── */
+    .progress-container { margin-top: 40px; }
+    .progress-label { font-size: 18px; margin-bottom: 15px; text-align: center; }
+    .progress-bar-bg {
+        width: 100%; height: 40px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 20px; overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        border-radius: 20px;
+        transition: width 0.5s ease;
+        box-shadow: 0 2px 10px rgba(79,172,254,0.5);
+        position: relative; overflow: hidden;
+    }
+    .progress-bar-fill::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    .percentage {
+        font-size: 36px; font-weight: bold;
+        text-align: center; margin-top: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .target-date { text-align: center; margin-top: 30px; font-size: 18px; opacity: 0.8; }
+
+    @media (max-width: 820px) {
+        /* 1. 컨테이너를 Flex로 만들어 요소들이 세로로 차곡차곡 쌓이게 합니다 */
+        .container { 
+            margin-top: 60px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+        }
+
+        /* 2. Absolute 포지션을 모두 해제(static)하고 넓이를 화면에 맞게 유동적으로 변경합니다 */
+        /* 턴 표시기와 월 표시기를 왼쪽으로 정렬하고 크기 축소 */
+        .month-period-box { 
+            position: static; 
+            align-self: flex-start; /* 컨테이너 중앙 정렬 무시하고 왼쪽으로 붙임 */
+            font-size: 13px; 
+            padding: 8px 16px; 
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0; /* 아래 턴 표시기와 딱 붙게 여백 제거 */
+            min-width: 150px;
+        }
+
+        .turn-indicator { 
+            position: static; 
+            align-self: flex-start; /* 컨테이너 중앙 정렬 무시하고 왼쪽으로 붙임 */
+            padding: 12px 20px; 
+            width: auto; /* 길쭉해지는 90% 고정값 해제 */
+            min-width: 150px; /* 데스크톱과 동일한 최소 너비 유지 */
+            border-radius: 0 0 20px 20px; /* 원래처럼 아래쪽만 둥글게 복구 */
+            margin-bottom: 15px;
+        }
+
+        .goal-box { 
+            position: static; 
+            width: 100%; /* 609px 고정값 덮어쓰기 */
+            font-size: 19px; 
+            padding: 15px 20px; 
+            border-radius: 15px; 
+            margin-bottom: 20px;
+        }
+
+        /* 3. 데스크톱용 디자인 요소(말풍선 꼬리)는 모바일에서 어색하므로 숨깁니다 */
+        .goal-box::before { 
+            display: none; 
+        }
+
+        /* 4. 폰트 및 여백 크기 조정 */
+        .turn-value { font-size: 36px; }
+        .turn-unit { font-size: 18px; }
+        .dday-value { 
+            font-size: 90px !important;
+        }
+        .main-card { padding: 40px 25px; width: 100%; }
+        
+        /* 5. 기존에 absolute 요소들 때문에 띄워뒀던 카드 마진 초기화 */
+        #cardsContainer .main-card:first-child { margin-top: 0; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 로딩 오버레이 -->
+<div id="loadingOverlay">
+    <div style="display:flex">
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+    </div>
+</div>
+
+<div class="container" id="mainContainer" style="visibility:hidden">
+    <div class="month-period-box" id="turnPeriod"></div>
+
+    <!-- 턴 표시기 -->
+    <div class="turn-indicator" id="turnIndicator">
+        <div class="turn-header" id="turnHeader">🎯 앞으로</div>
+        <div>
+            <span class="turn-value" id="turnValue">0</span>
+            <span class="turn-unit" id="turnUnit">턴</span>
+        </div>
+    </div>
+
+    <!-- 목표 박스 -->
+    <div class="goal-box" id="goalBox">
+        <div class="goal-text">
+            <div class="goal-label">🎯 목표</div>
+            <span id="goalText">로딩 중...</span>
+        </div>
+    </div>
+
+    <!-- 메인 카드들 (JS로 동적 생성) -->
+    <div id="cardsContainer"></div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ✏️  여기만 본인 Workers 주소로 변경하세요
+const API_URL = 'https://csat-backend.snackcandy105.workers.dev/api/ddays';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+let config = null;
+let dateOverride = null;
+
+window.setTestDate = function(d) {
+    dateOverride = (d === null || d === 'reset') ? null : new Date(d);
+    console.log(dateOverride ? '테스트 날짜: ' + dateOverride.toLocaleString('ko-KR') : '날짜 오버라이드 해제');
+    if (config) updateDisplay();
+};
+
+// ── 카드 DOM 생성 ────────────────────────────────────────
+function buildCards(ddays) {
+    const container = document.getElementById('cardsContainer');
+    container.innerHTML = '';
+    ddays.forEach((_, i) => {
+        const card = document.createElement('div');
+        card.className = 'main-card';
+        card.innerHTML =
+            '<div class="dday-container">' +
+                '<div class="dday-label" id="ddayLabel_' + i + '"></div>' +
+                '<div class="dday-value" id="ddayValue_' + i + '">D-0</div>' +
+            '</div>' +
+            '<div class="progress-container">' +
+                '<div class="progress-label" id="progressLabel_' + i + '"></div>' +
+                '<div class="progress-bar-bg">' +
+                    '<div class="progress-bar-fill" id="progressBar_' + i + '" style="width:0%"></div>' +
+                '</div>' +
+                '<div class="percentage" id="percentage_' + i + '">0.000000%</div>' +
+            '</div>' +
+            '<div class="target-date" id="targetDate_' + i + '"></div>';
+        container.appendChild(card);
+    });
+}
+
+// ── API 데이터 로드 ──────────────────────────────────────
+async function loadConfig() {
+    try {
+        const r = await fetch(API_URL);
+        if (!r.ok) throw new Error('API 오류');
+        config = await r.json();
+    } catch (e) {
+        console.error('설정 로드 실패:', e);
+        config = { ddays: [], turnConfig: null };
+    }
+
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('mainContainer').style.visibility = 'visible';
+
+    const visible = (config.ddays || []).filter(d => d.visible !== false);
+
+    if (visible.length === 0) {
+        document.getElementById('goalText').textContent = '설정 필요';
+        const container = document.getElementById('cardsContainer');
+        container.innerHTML =
+            '<div class="main-card" style="text-align:center;padding:60px 40px;opacity:0.7">' +
+                '관리자 페이지에서 D-Day를 설정해주세요' +
+            '</div>';
+        return;
+    }
+
+    document.getElementById('goalText').textContent = config.globalGoalText || '';
+
+    buildCards(visible);
+    updateDisplay();
+    setInterval(updateDisplay, 1000);
+}
+
+// ── 메인 업데이트 함수 ───────────────────────────────────
+function updateDisplay() {
+    const now = dateOverride || new Date();
+    const ddays = (config.ddays || []).filter(d => d.visible !== false);
+    const turnConfig = config.turnConfig;
+
+    if (ddays.length === 0) return;
+
+    // ── 턴 계산기 ────────────────────────────────────────
+    if (turnConfig && turnConfig.visible !== false) {
+        document.getElementById('turnIndicator').style.display = '';
+        document.getElementById('turnPeriod').style.display = '';
+
+        const refDday = ddays[turnConfig.ddayIndex] || ddays[0];
+        const turnTargetDateStr = turnConfig.targetDate || refDday.targetDate;
+        const turnTarget = new Date(turnTargetDateStr + 'T00:00:00');
+        const turnInfo = calculateTurn(now, turnTarget);
+        document.getElementById('turnPeriod').textContent = turnInfo.period;
+
+        const refTarget = new Date(refDday.targetDate + 'T00:00:00');
+        if (now.toDateString() === refTarget.toDateString()) {
+            document.getElementById('turnValue').textContent = '실전';
+            document.getElementById('turnValue').style.fontSize = '36px';
+            document.getElementById('turnUnit').style.display = 'none';
+            document.getElementById('turnHeader').textContent = '🎯';
+        } else if (now >= refTarget) {
+            document.getElementById('turnValue').textContent = '종료';
+            document.getElementById('turnValue').style.fontSize = '36px';
+            document.getElementById('turnUnit').style.display = 'none';
+            document.getElementById('turnHeader').textContent = '✅';
+        } else {
+            document.getElementById('turnValue').textContent = turnInfo.remainingTurns;
+            document.getElementById('turnValue').style.fontSize = '48px';
+            document.getElementById('turnUnit').style.display = 'inline';
+            document.getElementById('turnHeader').textContent = '🎯 앞으로';
+        }
+    } else {
+        document.getElementById('turnIndicator').style.display = 'none';
+        document.getElementById('turnPeriod').style.display = 'none';
+    }
+
+    // ── 각 D-Day 카드 업데이트 ───────────────────────────
+    ddays.forEach(function(item, i) {
+        const TARGET_DATE = new Date(item.targetDate + 'T00:00:00');
+        const START_DATE  = new Date(item.startDate  + 'T00:00:00');
+        const hasNext = item.nextTargetDate && now > TARGET_DATE;
+        const NEXT_DATE = hasNext ? new Date(item.nextTargetDate + 'T00:00:00') : null;
+        const valEl = document.getElementById('ddayValue_' + i);
+
+        // 1) 목표일 당일
+        if (now.toDateString() === TARGET_DATE.toDateString()) {
+            valEl.style.fontSize = '120px';
+            setDday(i, 'D-DAY', item.label, 100, '100.000000%', item.progressLabel, item.dateLabel);
+            return;
+        }
+
+        // 2) 목표일 이후 + 전환 D-Day 있음
+        if (now > TARGET_DATE && NEXT_DATE) {
+            if (now.toDateString() === NEXT_DATE.toDateString()) {
+                valEl.style.fontSize = '120px';
+                setDday(i, 'D-DAY', item.nextLabel || '', 100, '100.000000%', '', item.nextLabel || '');
+                return;
+            }
+            if (now > NEXT_DATE) {
+                valEl.style.fontSize = '80px';
+                setDday(i, '종료', item.label, 100, '100.000000%', item.progressLabel, item.dateLabel);
+                return;
+            }
+            var diff2 = Math.ceil((NEXT_DATE - now) / 864e5);
+            var pct2 = Math.max(0, Math.min(100, ((now - TARGET_DATE) / (NEXT_DATE - TARGET_DATE)) * 100));
+            valEl.style.fontSize = '120px';
+            setDday(i, 'D-' + diff2, item.nextLabel || '다음 목표까지', pct2, pct2.toFixed(6) + '%',
+                    TARGET_DATE.toLocaleDateString('ko-KR') + '부터의 진행도', item.nextLabel || '');
+            return;
+        }
+
+        // 3) 목표일 이후 + 전환 없음
+        if (now > TARGET_DATE) {
+            valEl.style.fontSize = '80px';
+            setDday(i, '종료', item.label, 100, '100.000000%', item.progressLabel, item.dateLabel);
+            return;
+        }
+
+        // 4) 일반 기간
+        valEl.style.fontSize = '120px';
+        var diff = Math.ceil((TARGET_DATE - now) / 864e5);
+        var pct = Math.max(0, Math.min(100, ((now - START_DATE) / (TARGET_DATE - START_DATE)) * 100));
+        setDday(i, 'D-' + diff, item.label, pct, pct.toFixed(6) + '%', item.progressLabel, item.dateLabel);
+    });
+}
+
+function setDday(i, value, label, pct, pctText, progLabel, dateLabel) {
+    document.getElementById('ddayValue_'     + i).textContent = value;
+    document.getElementById('ddayLabel_'     + i).textContent = label;
+    document.getElementById('progressBar_'   + i).style.width = pct + '%';
+    document.getElementById('percentage_'    + i).textContent = pctText;
+    document.getElementById('progressLabel_' + i).textContent = progLabel;
+    document.getElementById('targetDate_'    + i).textContent = dateLabel;
+}
+
+// ── 턴 계산 함수 ─────────────────────────────────────────
+// ── 턴 계산 함수 ─────────────────────────────────────────
+function calculateTurn(currentDate, targetDate) {
+    var year  = currentDate.getFullYear();
+    var month = currentDate.getMonth() + 1;
+    var day   = currentDate.getDate();
+
+    // 현재 달의 중간일 계산 (31일이면 15일, 그 외엔 14일)
+    var daysInMonth = new Date(year, month, 0).getDate();
+    var midDay = daysInMonth === 31 ? 15 : 14;
+    var isFirstHalf = day <= midDay;
+    var period = isFirstHalf ? '전반' : '후반';
+
+    var targetYear  = targetDate.getFullYear();
+    var targetMonth = targetDate.getMonth() + 1;
+    var targetDay   = targetDate.getDate();
+
+    // 목표 달의 중간일 계산
+    var targetDaysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+    var targetMidDay = targetDaysInMonth === 31 ? 16 : 15;
+    var isTargetFirstHalf = targetDay <= targetMidDay;
+
+    // 1. 각 날짜를 절대적인 '턴 인덱스'로 변환 (1년 = 24턴, 1개월 = 2턴)
+    var currentTurnIndex = (year * 24) + ((month - 1) * 2) + (isFirstHalf ? 0 : 1);
+    var targetTurnIndex = (targetYear * 24) + ((targetMonth - 1) * 2) + (isTargetFirstHalf ? 0 : 1);
+
+    // 2. 남은 턴 계산
+    var remainingTurns = targetTurnIndex - currentTurnIndex;
+
+    // 3. 날짜 비교를 위해 시간(시/분/초)을 제거한 순수 날짜 객체 생성
+    var currDateOnly = new Date(year, month - 1, day);
+    var targetDateOnly = new Date(targetYear, targetMonth - 1, targetDay);
+
+    // 4. 핵심 로직: 같은 턴(분기)에 진입했지만 아직 목표일이 지나지 않은 경우 1턴으로 보정
+    if (remainingTurns === 0 && currDateOnly < targetDateOnly) {
+        remainingTurns = 1;
+    } else if (remainingTurns < 0) {
+        // 이미 지나간 경우 0으로 처리 (보통 updateDisplay에서 '종료'로 덮어씌워짐)
+        remainingTurns = 0; 
+    }
+
+    return { period: month + '월 ' + period, remainingTurns: remainingTurns };
+}
+
+// ── 시작 ─────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>

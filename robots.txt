@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://orangeblue2336.github.io/csat-dday/sitemap.xml
